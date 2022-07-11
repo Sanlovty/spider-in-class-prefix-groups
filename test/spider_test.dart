@@ -6,8 +6,11 @@ import 'dart:io';
 import 'package:mockito/mockito.dart';
 import 'package:path/path.dart' as p;
 import 'package:spider/spider.dart';
-import 'package:spider/src/cli/config_retriever.dart';
-import 'package:spider/src/process_terminator.dart';
+import 'package:spider/src/cli/commands/commands.dart';
+import 'package:spider/src/cli/models/spider_config.dart';
+import 'package:spider/src/cli/process_terminator.dart';
+import 'package:spider/src/cli/utils/utils.dart';
+import 'package:spider/src/data/test_template.dart';
 import 'package:test/test.dart';
 
 import 'test_utils.dart';
@@ -72,11 +75,15 @@ void main() {
   };
 
   test('create config test test', () {
-    Spider.createConfigs(isJson: true);
+    Result<void> creationResult = ConfigCreator().create(isJson: true);
+
+    expect(creationResult.isSuccess, isTrue);
     expect(File('spider.json').existsSync(), true);
     File('spider.json').deleteSync();
 
-    Spider.createConfigs(isJson: false);
+    creationResult = ConfigCreator().create(isJson: false);
+
+    expect(creationResult.isSuccess, isTrue);
     expect(File('spider.yaml').existsSync(), true);
     File('spider.yaml').deleteSync();
   });
@@ -93,10 +100,17 @@ void main() {
     });
 
     test('asset generation test on spider', () async {
-      Spider.createConfigs(isJson: false);
+      File('spider.yaml').writeAsStringSync(testYamlConfigTemplate);
+
       createTestAssets();
 
-      final spider = Spider(retrieveConfigs()!);
+      final Result<SpiderConfiguration> result = retrieveConfigs();
+      expect(result.isSuccess, isTrue,
+          reason: 'valid config file should not return error but it did.');
+
+      final SpiderConfiguration config = result.data;
+
+      final spider = Spider(config);
       verifyNever(processTerminatorMock.terminate(any, any));
 
       spider.build();
@@ -164,7 +178,13 @@ void main() {
       createTestConfigs(testConfig);
       createTestAssets();
 
-      final spider = Spider(retrieveConfigs()!);
+      final Result<SpiderConfiguration> result = retrieveConfigs();
+      expect(result.isSuccess, isTrue,
+          reason: 'valid config file should not return error but it did.');
+
+      final SpiderConfiguration config = result.data;
+
+      final spider = Spider(config);
 
       verifyNever(processTerminatorMock.terminate(any, any));
 
