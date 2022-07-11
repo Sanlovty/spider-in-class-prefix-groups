@@ -17,7 +17,7 @@
 // Author: Birju Vachhani
 // Created Date: February 02, 2020
 
-import 'version.dart';
+import '../../version.dart';
 
 /// Holds all the constants
 class Constants {
